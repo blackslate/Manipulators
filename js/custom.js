@@ -1,6 +1,6 @@
 ;(function (THREE){
   function init() {
-    var NORMAL = new THREE.Vector3(0, 1, 0) //<HARD-CODED for testing>
+    var NORMAL = new THREE.Vector3(1, 0, 0) //<HARD-CODED for testing>
     var selection = []
     var scene = new THREE.Scene();
 
@@ -106,83 +106,109 @@
       var raycaster = new THREE.Raycaster();
       var mouse = new THREE.Vector2();
       var pointOnPlane = new THREE.Vector3()
+      var dragPoint = new THREE.Vector3() // click point on selection
       var dragVector = new THREE.Vector3()
       var lastDistance = 0
       var intersects
+        , ratio
         , secondPoint
         , distanceToPlane
         , translation
 
       function startTranslation( event ) {
-          // calculate mouse position in normalized device coordinates
-          // (-1 to +1) for both components
-          mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-          mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        // calculate mouse position in normalized device coordinates
+        // (-1 to +1) for both components
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
-          raycaster.setFromCamera( mouse, camera )
-          intersects = raycaster.intersectObject ( plane )
-          pointOnPlane = intersects[0].point
-
-          //console.log("Start", mouse.x, mouse.y, pointOnPlane)
-
-          function moveSelectionAlongAxis( mouse ) {
-            raycaster.setFromCamera( mouse, camera )
-            intersects = raycaster.intersectObject ( plane )
-            secondPoint = intersects[0].point
-            //console.log(mouse.x, mouse.y, secondPoint)
-            dragVector.subVectors(secondPoint, pointOnPlane)
-            distanceToPlane = dragVector.dot(NORMAL)
-            if (distanceToPlane) {
-                console.log(distanceToPlane)
-            }
-            translation = distanceToPlane - lastDistance
-            lastDistance = distanceToPlane
-
-            console.log(distanceToPlane, translation)
-
-            selection.forEach(function (object) {
-              object.translateOnAxis ( NORMAL, translation )
-            })
-            
-            // { distance: 2588.5620353598674
-            // , face: THREE.Face3
-            // , faceIndex: null
-            // , object: THREE.Mesh
-            // , point: THREE.Vector3 {
-            //   , x: 879.3006373113469
-            //   , y: -1266.2009930793445
-            //   , z: -2011.4859116756434
-            //   }
-            // }
-          }
-
-          window.addEventListener( 'mousemove', translate, false );
-          window.addEventListener( 'mouseup', stopTranslation, false )
-
-          function translate(event) {
-            mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-            mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1
-            moveSelectionAlongAxis(mouse)
-          }
-
-          function stopTranslation() {
-            window.removeEventListener( 'mousemove', translate );
-            window.removeEventListener( 'mouseup', stopTranslation );
-          }
+        raycaster.setFromCamera( mouse, camera )
+        selection.push(plane)
+        intersects = raycaster.intersectObjects ( selection )
+        selection.pop()
+        if (intersects.length < 2) {
+          // The user did not click on one of the selected objects
+          // so we ignore the drag. In the future, we might use the
+          // centre of gravity of the selection instead.
+          return
         }
 
-        // mouse.x and y are now values between -1 and +1, with 0,0 at the centre of the window.
+        setIntersectionPoints(intersects)
 
-        // function render() {
-        //   // update the picking ray with the camera and mouse position
-        //   raycaster.setFromCamera( mouse, camera );
-        //   // calculate objects intersecting the picking ray
-        //   var intersects = raycaster.intersectObjects( scene.children );
-        //   for ( var i = 0; i < intersects.length; i++ ) {
-        //     intersects[ i ].object.material.color.set( 0xff0000 );
-        //   }
+        function setIntersectionPoints(intersects) {
+          var dragDistance = -1
+          var planeDistance
 
-        // }
+          intersects.forEach(function (intersectionObject) {
+            if ( intersectionObject.object === plane ) {
+              pointOnPlane = intersectionObject.point
+              planeDistance = intersectionObject.distance
+            } else if (dragDistance < 0) {
+              dragPoint = intersectionObject.point
+              dragDistance = intersectionObject.distance
+            }
+          })
+          
+          ratio = dragDistance / planeDistance
+        }
+
+        function moveSelectionAlongAxis( mouse ) {
+          raycaster.setFromCamera( mouse, camera )
+          intersects = raycaster.intersectObject ( plane )
+          secondPoint = intersects[0].point
+          //console.log(mouse.x, mouse.y, secondPoint)
+          dragVector.subVectors(secondPoint, pointOnPlane)
+          distanceToPlane = dragVector.dot(NORMAL)
+          if (distanceToPlane) {
+              console.log(distanceToPlane)
+          }
+          translation = (distanceToPlane - lastDistance) * ratio
+          lastDistance = distanceToPlane
+
+          console.log(distanceToPlane, translation)
+
+          selection.forEach(function (object) {
+            object.translateOnAxis ( NORMAL, translation )
+          })
+          
+          // { distance: 2588.5620353598674
+          // , face: THREE.Face3
+          // , faceIndex: null
+          // , object: THREE.Mesh
+          // , point: THREE.Vector3 {
+          //   , x: 879.3006373113469
+          //   , y: -1266.2009930793445
+          //   , z: -2011.4859116756434
+          //   }
+          // }
+        }
+
+        window.addEventListener( 'mousemove', translate, false );
+        window.addEventListener( 'mouseup', stopTranslation, false )
+
+        function translate(event) {
+          mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+          mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1
+          moveSelectionAlongAxis(mouse)
+        }
+
+        function stopTranslation() {
+          window.removeEventListener( 'mousemove', translate );
+          window.removeEventListener( 'mouseup', stopTranslation );
+        }
+      }
+
+      // mouse.x and y are now values between -1 and +1, with 0,0 at the centre of the window.
+
+      // function render() {
+      //   // update the picking ray with the camera and mouse position
+      //   raycaster.setFromCamera( mouse, camera );
+      //   // calculate objects intersecting the picking ray
+      //   var intersects = raycaster.intersectObjects( scene.children );
+      //   for ( var i = 0; i < intersects.length; i++ ) {
+      //     intersects[ i ].object.material.color.set( 0xff0000 );
+      //   }
+
+      // }
 
       window.addEventListener( 'mousedown', startTranslation, false );
 
