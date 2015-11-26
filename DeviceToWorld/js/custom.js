@@ -1,6 +1,4 @@
 function init() {
-  var AXIS = new THREE.Vector3(1, 0, 0).normalize()//<HARD-CODED for testing>
-  var selection = [] // will contain three objects
   var scene = new THREE.Scene()
 
   // Create a perspective camera
@@ -26,12 +24,12 @@ function init() {
   })
   var cyanMaterial = new THREE.MeshBasicMaterial({
     color: 0x00ffff
-  , opacity: 0.25
+  , opacity: 0.5
   , transparent: true
   })
   var magentaMaterial = new THREE.MeshBasicMaterial({
     color: 0xff00ff
-  , opacity: 0.25
+  , opacity: 0.5
   , transparent: true
   })
   var xyPlane = new THREE.Mesh(planeGeometry, yellowMaterial)
@@ -45,19 +43,10 @@ function init() {
   xzPlane.rotation.x = -0.5 * Math.PI
   scene.add(xzPlane)
 
-  // create a cube with a custom rotation
-  var cubeGeometry = new THREE.BoxGeometry(40, 40, 40)
-  var cubeMaterial = new THREE.MeshBasicMaterial({color: 0xff0000, wireframe: true})
-  var cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-  cube.position.x = 0
-  cube.position.y = 400
-  cube.position.z = 400
-  scene.add(cube)
-
   // position and point the camera to the center of the scene
-  camera.position.x = 00
-  camera.position.y = 00
-  camera.position.z = 2000
+  camera.position.x = 500
+  camera.position.y = 700
+  camera.position.z = 1300
   camera.lookAt(scene.position)
 
   // add the output of the renderer to the html element
@@ -65,6 +54,14 @@ function init() {
 
   ;(function createObjectManipulator(scene, camera){
     var viewPlane
+    // <FOR TESTING>
+    var cubeGeometry = new THREE.BoxGeometry(40, 40, 40)
+    var cubeMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff
+    , wireframe: true})
+    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+    // </FOR TESTING>
 
     ;(function createViewPortPlane() {
       // Add the camera to the scene so that its children are
@@ -77,7 +74,11 @@ function init() {
       var side = 2000
       var segments = 20
       var planeGeometry = new THREE.PlaneBufferGeometry(side, side, segments, segments)
-      var planeMaterial = new THREE.MeshBasicMaterial({color: 0x7777ff, wireframe: true})
+      var planeMaterial = new THREE.MeshBasicMaterial({
+        color: 0x000000
+      , wireframe: false
+      , transparent: true
+      , opacity: 0.5})
       viewPlane = new THREE.Mesh(planeGeometry, planeMaterial)
 
       //viewPlane.visible = false
@@ -163,10 +164,6 @@ function init() {
           origin = intersects[0].point
           ray.subVectors(origin, cameraPosition).multiplyScalar(ratio)
           origin = ray.add(cameraPosition)
-
-          // var cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-          // cube.position.copy(origin)
-          // scene.add(cube)
           
           // EDGE CASES: click on left or bottom edge, angle 0° or 90°
           angle = Math.atan2(viewY, viewX * aspect)
@@ -182,11 +179,31 @@ function init() {
           yAxis.copy(originToClickPoint).projectOnVector(temp)
           yAxis.multiplyScalar(1 / viewY)
           console.log(xAxis, yAxis, zAxis)
+
+          cameraToWorld.makeBasis(xAxis, yAxis, zAxis)
+          cameraToWorld.setPosition(origin)
+
+          // <FOR TESTING>
+          cube.position.copy(clickPointWorld)
+          scene.add(cube)
+          var distanceToCube = clickPointWorld.clone().sub(cameraPosition).dot(zAxis)
+          viewPlane.position.z = distanceToCube
+          // </FOR TESTING>
+
         })()
       })()
 
       function drag(event) {
-        
+        var cubePosition
+        var dragPoint3 = new THREE.Vector3()
+        var viewX = event.clientX / window.innerWidth
+        var viewY = 1 - event.clientY / window.innerHeight
+        dragPoint3.x = viewX
+        dragPoint3.y = viewY
+
+        cubePosition = dragPoint3.clone().applyMatrix4(cameraToWorld)
+
+        cube.position.copy(cubePosition)
       }
 
       function stopDrag(event) {
