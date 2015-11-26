@@ -1,28 +1,7 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>THREE.JS WORLD</title>
-    <script type="text/javascript" src="thirdparty/three.js"></script>
-    <style>
-        body {
-            /* set margin to 0 and overflow to hidden, to
-             use the complete page */
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body>
-
-<!-- Div which will hold the Output -->
-<div id="WebGL-output">
-</div>
-
-<!-- Javascript code that runs our Three.js examples -->
-<script>
 function init() {
-  var AXIS = new THREE.Vector3(1, 0, 0).normalize()//<HARD-CODED for testing>
+  var PLANE = new THREE.Plane(new THREE.Vector3(0,1,0), 0)
+
+  //<HARD-CODED for testing>
   var selection = [] // will contain three objects
   var scene = new THREE.Scene()
 
@@ -125,6 +104,7 @@ function init() {
     }
 
     function startTranslation( event ) {
+      var normal = PLANE.normal
       var raycaster = new THREE.Raycaster()
       var mouse = new THREE.Vector2()
       var mappedAxis = new THREE.Vector3()
@@ -203,7 +183,7 @@ function init() {
         })
       }
 
-      function moveSelectionAlongAxis( mouse ) {
+      function moveSelectionInPlane( mouse ) {
         var dragVector = new THREE.Vector3()
         var dragPoint = new THREE.Vector3()
         var dragDirection = new THREE.Vector3()
@@ -282,6 +262,3 @@ function init() {
 }
 
 window.onload = init
-</script>
-</body>
-</html>

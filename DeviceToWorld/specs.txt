@@ -1,0 +1,20 @@
+I have:
+* A point in the plane at a known x, y position
+* ... from which I can determine an angle
+* An origin for the plane
+* A normal for the plane (the z-axis)
+* A local vector (x, y, 0) from the origin to the known point
+* A corresponding world vector (Wx, Wy, Wz)
+
+
+I need to create the x and y axes which fall in this plane.
+
+To calculate the point (1, 1), I can take the vector from the origin to (x, y) and multiply it by 
+
+I can determine the angle of the (x, y) position, then rotate the (Wx, Wy, Wz) vector around the plane's z-axis to give the x and z axes in world co-ordinates.
+
+Normalize these vectors, and find the dot product with the original (Wx, Wy, Wz) vector. This gives the world length of the (x, y, 0) coordinates of the point in the new basis. Divide these values by x and y to give the length of a unit along the axis in the new basis. This gives the scale of the basis (1 along z is fine).
+
+Create a matrix from the x, y and z axes, using new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis).setPosition(origin)
+
+To test: use vector(viewX, viewY, 0) to move a box with the mouse.
