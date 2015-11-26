@@ -53,24 +53,16 @@ function init() {
   document.getElementById("WebGL-output").appendChild(renderer.domElement)
 
   ;(function createObjectManipulator(scene, camera){
-    var viewPlane
-    // <FOR TESTING>
-    var cubeGeometry = new THREE.BoxGeometry(40, 40, 40)
-    var cubeMaterial = new THREE.MeshBasicMaterial({
-      color: 0xffffff
-    , wireframe: true})
-    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-    // </FOR TESTING>
+     // <FOR TESTING ONLY>
+    var dragPlane
+    var dragCube
+    var cameraPosition
+    var zAxis
 
-    ;(function createViewPortPlane() {
-      // Add the camera to the scene so that its children are
-      // in the scene
+    ;(function testing() {     
       scene.add(camera)
 
-      // Create an invisible plane that will fill the view of 
-      // the perspective camera. For an orthographic camera,
-      //  the plane will have different scaling.
+      // DRAG PLANE
       var side = 2000
       var segments = 20
       var planeGeometry = new THREE.PlaneBufferGeometry(side, side, segments, segments)
@@ -79,138 +71,94 @@ function init() {
       , wireframe: false
       , transparent: true
       , opacity: 0.5})
-      viewPlane = new THREE.Mesh(planeGeometry, planeMaterial)
+      dragPlane = new THREE.Mesh(planeGeometry, planeMaterial)
 
-      //viewPlane.visible = false
-      
-      // viewAngle is vertical angle of camera frustrum. Use
-      // half the angle to place the plane at the point where
-      // it fills the viewport. If the plane fills viewport
-      // perfectly, the viewport point (1,1) is outside the plane, so
-      // raycaster intersects return nothing. Solution: fudge.
-      var fudge = 0.9 //999
       var angle = camera.fov * Math.PI / 360
       var distance = side / 2 / Math.tan(angle)
-      viewPlane.translateZ(-distance * fudge)
-      viewPlane.scale.x = camera.aspect
-      camera.add(viewPlane)
+      dragPlane.translateZ(-distance)
+      dragPlane.scale.x = camera.aspect
+      camera.add(dragPlane)
+
+      // CUBE TO DRAG
+      var cubeGeometry = new THREE.BoxGeometry(40, 40, 40)
+      var cubeMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff
+      , wireframe: true})
+      dragCube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+
+      // CAMERA
+      cameraPosition = new THREE.Vector3()
+      camera.updateMatrixWorld()
+      cameraPosition.setFromMatrixPosition( camera.matrixWorld )
+
+      zAxis = camera.getWorldDirection().negate()
     })()
+    // </FOR TESTING ONLY>
 
-    window.addEventListener( 'mousedown', startDrag, false )
+    var viewport = window
+    var viewWidth = viewport.innerWidth
+    var viewHeight = viewport.innerHeight
 
-    function startDrag(event) {
-      window.addEventListener( 'mousemove', drag, false )
-      window.addEventListener( 'mouseup', stopDrag, false )
-    
-      var mouse3 = new THREE.Vector3()
-      var clickPoint3 = new THREE.Vector3()
-      var cameraPosition = (function getCameraWorldPosition() {
-        var position = new THREE.Vector3()
-        camera.updateMatrixWorld()
-        position.setFromMatrixPosition( camera.matrixWorld )
-        return position
-      })()
-      var cameraToWorld = new THREE.Matrix4()
+    ;(function cameraProjectDemo(){
+      viewport.addEventListener( 'mousedown', startDrag, false )
 
-      ;(function initializeDrag(){
-        var viewX = event.clientX / window.innerWidth
-        var viewY = 1 - event.clientY / window.innerHeight
-        clickPoint3.x = viewX
-        clickPoint3.y = viewY
+      var target
+        , viewClickPoint
 
-        ;(function createDragMatrix(){
-          var mouse2 = new THREE.Vector2()
-          var raycaster = new THREE.Raycaster()
-          var ray = new THREE.Vector3()
-          var originToClickPoint = new THREE.Vector3()
-          var temp = new THREE.Vector3()
-          var xAxis = new THREE.Vector3()
-          var yAxis = new THREE.Vector3()
-          var zAxis = camera.getWorldDirection().negate()
-          var aspect = camera.aspect
+      function startDrag(event) { 
+        window.addEventListener( 'mousemove', drag, false )
+        window.addEventListener( 'mouseup', stopDrag, false )
+ 
+        var viewPoint = getViewPoint(event)
+        target = getModelUnderMouse(viewPoint)
 
-          var targetDistance = -1
-          var planeDistance
-            , clickPointWorld
-            , ratio
-            , origin
-            , angle
+        if (!target) {
+          stopDrag()
+          return
+        }
 
-          mouse2.x = viewX * 2 - 1
-          mouse2.y = viewY * 2 - 1
-          raycaster.setFromCamera( mouse2, camera )
-          intersects = raycaster.intersectObjects(scene.children,true)
+        viewClickPoint = target.point.clone().project(camera)
 
-          if (intersects.length < 2) {
-            stopDrag()
-            return
-          }
-          
-          intersects.forEach(function setDistances(data, index) {
-            if (data.object === viewPlane) {
-              planeDistance = data.distance
-            } else if (targetDistance < 0) {
-              targetDistance = data.distance
-              clickPointWorld = data.point
-            }
-          })
-
-          ratio = targetDistance / planeDistance
-
-          //console.log(targetDistance, planeDistance, ratio)
-          mouse2.x = mouse2.y = -1
-          raycaster.setFromCamera( mouse2, camera )
-          intersects = raycaster.intersectObject ( viewPlane )
-          origin = intersects[0].point
-          ray.subVectors(origin, cameraPosition).multiplyScalar(ratio)
-          origin = ray.add(cameraPosition)
-          
-          // EDGE CASES: click on left or bottom edge, angle 0° or 90°
-          angle = Math.atan2(viewY, viewX * aspect)
-          originToClickPoint.subVectors(clickPointWorld, origin)
-          temp.copy(originToClickPoint)
-          temp.applyAxisAngle(zAxis, -angle)
-          xAxis.copy(originToClickPoint)
-               .projectOnVector(temp)
-               .multiplyScalar(1 / viewX)
-
-          temp.copy(originToClickPoint)
-          temp.applyAxisAngle(zAxis, (Math.PI/2 - angle))
-          yAxis.copy(originToClickPoint).projectOnVector(temp)
-          yAxis.multiplyScalar(1 / viewY)
-          console.log(xAxis, yAxis, zAxis)
-
-          cameraToWorld.makeBasis(xAxis, yAxis, zAxis)
-          cameraToWorld.setPosition(origin)
-
-          // <FOR TESTING>
-          cube.position.copy(clickPointWorld)
-          scene.add(cube)
-          var distanceToCube = clickPointWorld.clone().sub(cameraPosition).dot(zAxis)
-          viewPlane.position.z = distanceToCube
-          // </FOR TESTING>
+        ;(function testing(){ 
+          dragCube.position.copy(target.point)
+          scene.add(dragCube)
+          var distanceToCube = target.point.clone()
+                                           .sub(cameraPosition)
+                                           .dot(zAxis)
+          dragPlane.position.z = distanceToCube
         })()
-      })()
+      }
 
       function drag(event) {
-        var cubePosition
-        var dragPoint3 = new THREE.Vector3()
-        var viewX = event.clientX / window.innerWidth
-        var viewY = 1 - event.clientY / window.innerHeight
-        dragPoint3.x = viewX
-        dragPoint3.y = viewY
-
-        cubePosition = dragPoint3.clone().applyMatrix4(cameraToWorld)
-
-        cube.position.copy(cubePosition)
+        var viewPoint = getViewPoint(event, viewClickPoint.z)
+        var worldPoint = viewPoint.clone().unproject(camera)
+        dragCube.position.copy(worldPoint)
       }
 
       function stopDrag(event) {
         window.removeEventListener( 'mousemove', drag, false )
         window.removeEventListener( 'mouseup', stopDrag, false )      
       }
-    }
 
+      function getViewPoint(event, z) {
+        var viewPoint = new THREE.Vector3()
+
+        viewPoint.x = (event.clientX / viewWidth) * 2 - 1
+        viewPoint.y = 1 - (event.clientY / viewHeight) * 2
+        viewPoint.z = z || 0
+ 
+        return viewPoint
+      }
+
+      function getModelUnderMouse(viewPoint) {
+        var raycaster = new THREE.Raycaster()    
+
+        raycaster.setFromCamera( viewPoint, camera )
+        intersects = raycaster.intersectObjects(scene.children)
+        
+        return intersects[0] // may be undefined
+      }
+    })()
   })(scene, camera)
 
   ;(function render() {
