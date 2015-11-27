@@ -2,22 +2,30 @@
 <html>
 
 <head>
-    <title>THREE.JS WORLD</title>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
-    <style>
-        body {
-            /* set margin to 0 and overflow to hidden, to
-             use the complete page */
-            margin: 0;
-            overflow: hidden;
-        }
-    </style>
+  <title>THREE.JS WORLD</title>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
+  <style>
+    body {
+        /* set margin to 0 and overflow to hidden, to
+         use the complete page */
+        margin: 0;
+        overflow: hidden;
+    }
+    p {
+      position: absolute;
+      margin: 0;
+      left: 0;
+      top: 0;
+      font-size: 2em;
+    }
+  </style>
 </head>
 <body>
 
 <!-- Div which will hold the Output -->
 <div id="WebGL-output">
 </div>
+<p id="constraint"></p>
 
 <!-- Javascript code that runs our Three.js examples -->
 <script src="js/custom.js">
