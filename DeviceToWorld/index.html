@@ -11,12 +11,20 @@
         margin: 0;
         overflow: hidden;
     }
-    p {
+    select {
       position: absolute;
       margin: 0;
       left: 0;
       top: 0;
-      font-size: 2em;
+    }
+    select#action {
+      left: 5em;
+    }
+    p {
+      position: absolute;
+      margin: 0;
+      left: 10em;
+      top: 0;
     }
   </style>
 </head>
@@ -25,7 +33,17 @@
 <!-- Div which will hold the Output -->
 <div id="WebGL-output">
 </div>
-<p id="constraint"></p>
+<select id="action">
+  <option value="world">Translate</option> 
+  <option value="local">Rotate</option>
+  <option value="view">Scale</option>
+</select>
+<select id="space">
+  <option value="world">World</option> 
+  <option value="local">Local</option>
+  <option value="view">View</option>
+</select>
+<p>Freedom: <span id="freedom">xyz</span></p>
 
 <!-- Javascript code that runs our Three.js examples -->
 <script src="js/custom.js">
