@@ -1,3 +1,23 @@
+/**
+This version uses a THREE.Raycaster to get the object under the mouse
+when the user first clicks. Later versions should use ...
+
+$scene.clara('registerTool', {
+  name: "treatClick"
+, click: <nameOfFunction>
+})
+
+...  and get the details of the object that was clicked from the
+event that is passed to the function.
+
+Modifications are currently applied directly to the transform matrix
+of the manipulated object. Later versions will:
+* modify a separate matrix in world space for the manipulation
+* create a local-space matrix for each manipulated object
+* use ctx() to update the local matrix of each object reactively
+**/
+
+
 function init() {
   var scene = new THREE.Scene()
 
@@ -53,19 +73,26 @@ function init() {
   document.getElementById("WebGL-output").appendChild(renderer.domElement)
 
   ;(function createObjectManipulator(scene, camera){
-    var constraint = ""
+    var freedom = "" //"x" | "y" | "z" | "yz" | "xy" | "xz" | "xyz"
+    var space = "world" // "local" | "view"
+    var action = "translate"
 
      // <FOR TESTING ONLY>
     var dragPlane
     var dragCube
-    var cameraPosition
     var zAxis
-    var constraintElement = document.querySelector("#constraint")
+    var freedomElement = document.querySelector("#freedom")
+    document.querySelector("#space").onchange = function (event) {
+      space = event.target.value
+    }
+    document.querySelector("#action").onchange = function (event) {
+      action = event.target.value
+    }
 
-    ;(function treatConstraintKeys(){
-      // Use Z, X and C (instead of Y) or ;QJ to toggle constraints 
-      window.addEventListener( 'keydown', addConstraint, false )
-      window.addEventListener( 'keyup', removeConstraint, false )
+    ;(function treatContext(){
+      // Use Z, X and C (instead of Y) or ;QJ to toggle freedoms 
+      window.addEventListener( 'keydown', addFreedom, false )
+      window.addEventListener( 'keyup', removeFreedom, false )
       var keys = {
         88: "x"
       , 67: "y" // c
@@ -78,26 +105,26 @@ function init() {
       , 75: "y" // k
       , 186: "z" // ;
       }
-      var constraintKeysPressed = []
+      var freedomKeysPressed = []
 
-      function addConstraint(event) {
+      function addFreedom(event) {
         var key = keys[event.keyCode]
-        if (key && constraintKeysPressed.indexOf(key) < 0) {
-          constraintKeysPressed.push(key)
-          constraintKeysPressed.sort()
-          constraint = constraintKeysPressed.join("")
+        if (key && freedomKeysPressed.indexOf(key) < 0) {
+          freedomKeysPressed.push(key)
+          freedomKeysPressed.sort()
+          freedom = freedomKeysPressed.join("")
         }
-        constraintElement.innerHTML = constraint
+        freedomElement.innerHTML = freedom
       }
 
-      function removeConstraint(event) {
+      function removeFreedom(event) {
         var key = keys[event.keyCode]
-        var index = constraintKeysPressed.indexOf(key)
+        var index = freedomKeysPressed.indexOf(key)
         if (index > -1) {
-          constraintKeysPressed.splice(index, 1)
-          constraint = constraintKeysPressed.join("")
+          freedomKeysPressed.splice(index, 1)
+          freedom = freedomKeysPressed.join("")
         }
-        constraintElement.innerHTML = constraint
+        freedomElement.innerHTML = freedom || "xyz"
       }
     })()
 
@@ -105,9 +132,11 @@ function init() {
       // CUBE TO DRAG
       var cubeGeometry = new THREE.BoxGeometry(40, 40, 40)
       var cubeMaterial = new THREE.MeshBasicMaterial({
-        color: 0xffffff
+        color: 0x000000
       , wireframe: true})
       dragCube = new THREE.Mesh(cubeGeometry, cubeMaterial)
+      dragCube.rotation.x = 30
+      dragCube.rotation.y = 45
     })()
     // </FOR TESTING ONLY>
 
@@ -118,69 +147,111 @@ function init() {
     ;(function cameraProjectDemo(){
       viewport.addEventListener( 'mousedown', startDrag, false )
 
-      var target
+      var targetData
         , worldClickPoint
         , viewClickPoint
+        , cameraPosition // set on startDrag
 
       function startDrag(event) { 
         window.addEventListener( 'mousemove', drag, false )
         window.addEventListener( 'mouseup', stopDrag, false )
  
+        cameraPosition = camera.getWorldPosition()
         var viewPoint = getViewPoint(event)
-        target = getModelUnderMouse(viewPoint)
+        targetData = getModelUnderMouse(viewPoint) // uses Raycaster
 
-        if (!target) {
+        if (!targetData) {
           stopDrag()
           return
         }
 
-        worldClickPoint = target.point
+        worldClickPoint = targetData.point
         viewClickPoint = worldClickPoint.clone().project(camera)
 
         ;(function testing(){ 
-          dragCube.position.copy(target.point)
+          dragCube.position.copy(targetData.point)
           scene.add(dragCube)
         })()
       }
 
       function drag(event) {
-        var viewPoint = getViewPoint(event, viewClickPoint.z)
-        var worldPoint = viewPoint.clone().unproject(camera)
-        var translateVector = worldPoint.clone().sub(worldClickPoint)
+        switch (action) {
+          // IGNORE action FOR NOW. JUST TRANSLATE.
+          case "rotate":
+          case "scale":
+          case "translate":
+            dragToTranslate(event)
+          break
+        }
+      }
 
-        //console.log(translateVector, translateVector.length())
+      function dragToTranslate (event) {
+        var matrix = new THREE.Matrix4() // world space
+        var xAxis = new THREE.Vector3()
+        var yAxis = new THREE.Vector3()
+        var zAxis = new THREE.Vector3()
 
-        switch (constraint) {
+        switch (space) {
+          case "view":
+            matrix.copy(camera.matrixWorld)
+          break
+          case "local":
+            matrix.copy(dragCube.matrixWorld)
+          break
+          case "world":
+            // matrix is already in world space
+          break
+        }
+
+        matrix.extractBasis(xAxis,yAxis,zAxis)
+
+        switch (freedom) {
           default: // case "xyz":
             // No constraint: drag along plane parallel to viewport
-            return dragCube.position.copy(worldPoint)
+            constrainToViewPlane(event)
+          break
 
           case "x":
-            translateVector.y = translateVector.z = 0
+            constrainToAxis(xAxis, event)
           break
           case "y":
-            translateVector.x = translateVector.z = 0
+            constrainToAxis(yAxis, event)
           break
           case "z":
-            translateVector.x = translateVector.y = 0
+           constrainToAxis(zAxis, event)
           break
+
           case "yz":
-            translateVector.x = 0
+            constrainToPlane("x", xAxis, event)
           break
           case "xz":
-            translateVector.y = 0
+            constrainToPlane("y", yAxis, event)
           break
           case "xy":
-            translateVector.z = 0
+            constrainToPlane("z", zAxis, event)
           break
         }
 
-        if (translateVector.length() > 100) {
-          a = 0
+        function constrainToAxis(axis, event) {
+          var axisRay = new THREE.Ray(
+            dragCube.getWorldPosition()
+          , axis
+          )
+          var viewRay = getCameraRay(event)
+          var axisPosition = axisRay.closestPointToRay(viewRay)
+          if (axisPosition) {
+            dragCube.position.copy(axisPosition)
+          }
         }
 
-        worldPoint.addVectors(worldClickPoint, translateVector)
-        dragCube.position.copy(worldPoint)
+        function constrainToPlane(constrain, normal, event) {
+          
+        }
+
+        function constrainToViewPlane(event) {
+          var worldPoint = getWorldViewPoint(event, viewClickPoint.z)
+          dragCube.position.copy(worldPoint)
+        }
       }
 
       function stopDrag(event) {
@@ -193,9 +264,24 @@ function init() {
 
         viewPoint.x = (event.clientX / viewWidth) * 2 - 1
         viewPoint.y = 1 - (event.clientY / viewHeight) * 2
-        viewPoint.z = z || 0
+        if (z) {
+          viewPoint.z = z
+        }
  
         return viewPoint
+      }
+
+      function getWorldViewPoint(event, z) {
+        var viewPoint = getViewPoint(event, z)
+        viewPoint.unproject(camera)
+        return viewPoint
+      }
+
+      function getCameraRay(event) {
+        var worldPoint = getWorldViewPoint(event)
+        var direction = worldPoint.sub(cameraPosition).normalize()
+        var ray = new THREE.Ray(cameraPosition, direction)
+        return ray
       }
 
       function getModelUnderMouse(viewPoint) {
@@ -214,6 +300,9 @@ function init() {
     requestAnimationFrame(render)
   })()
 }
+
+
+// Extending Three.js //
 
 THREE.Ray.prototype.closestPointToRay = function (that, details) {
   // that: THREE.Ray() 
@@ -301,6 +390,18 @@ THREE.Ray.prototype.closestPointToRay = function (that, details) {
   }
 
   return closestPoint
+}
+
+THREE.Object3D.prototype.getWorldPosition = function (forceUpdate) {
+  var position = new THREE.Vector3()
+
+  if (forceUpdate) {
+    this.updateMatrixWorld()
+  }
+
+  position.setFromMatrixPosition( this.matrixWorld )
+
+  return position
 }
 
 window.onload = init
