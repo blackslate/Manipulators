@@ -91,8 +91,7 @@ function init() {
 
     ;(function treatContext(){
       // Use Z, X and C (instead of Y) or ;QJ to toggle freedoms 
-      window.addEventListener( 'keydown', addFreedom, false )
-      window.addEventListener( 'keyup', removeFreedom, false )
+      window.addEventListener( 'keyup', toggleFreedom, false )
       var keys = {
         88: "x"
       , 67: "y" // c
@@ -107,24 +106,23 @@ function init() {
       }
       var freedomKeysPressed = []
 
-      function addFreedom(event) {
+      function toggleFreedom(event) {
         var key = keys[event.keyCode]
-        if (key && freedomKeysPressed.indexOf(key) < 0) {
-          freedomKeysPressed.push(key)
-          freedomKeysPressed.sort()
-          freedom = freedomKeysPressed.join("")
-        }
-        freedomElement.innerHTML = freedom
-      }
 
-      function removeFreedom(event) {
-        var key = keys[event.keyCode]
-        var index = freedomKeysPressed.indexOf(key)
-        if (index > -1) {
-          freedomKeysPressed.splice(index, 1)
-          freedom = freedomKeysPressed.join("")
+        if (key) {
+          var index = freedomKeysPressed.indexOf(key)
+
+          if (index < 0) {
+            freedomKeysPressed.push(key)
+            freedomKeysPressed.sort()
+            freedom = freedomKeysPressed.join("")
+          } else {
+            freedomKeysPressed.splice(index, 1)
+            freedom = freedomKeysPressed.join("")
+          }
+
+          freedomElement.innerHTML = freedom || "xyz"
         }
-        freedomElement.innerHTML = freedom || "xyz"
       }
     })()
 
