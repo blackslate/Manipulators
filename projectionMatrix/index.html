@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>THREE.JS WORLD</title>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
+  <style>
+    body {
+        /* set margin to 0 and overflow to hidden, to
+         use the complete page */
+        margin: 0;
+        overflow: hidden;
+    }
+    select {
+      position: absolute;
+      margin: 0;
+      left: 0;
+      top: 0;
+    }
+    select#action {
+      left: 6em;
+    }
+    p {
+      position: absolute;
+      margin: 0;
+      left: 10em;
+      top: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+<select id="action">
+  <option value="world">Translate</option> 
+  <option value="local">Rotate</option>
+  <option value="view">Scale</option>
+</select>
+<select id="space">
+  <option value="world">World</option> 
+  <option value="local">Local</option>
+  <option value="view">View</option>
+</select>
+<p>Freedom: <span id="freedom">xyz</span></p>
+
+<!-- Javascript code that runs our Three.js examples -->
+<script src="js/custom.js">
+</script>
+</body>
+</html>

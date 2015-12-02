@@ -1,0 +1,15 @@
+#ThreeJS {
+  position: absolute;
+  left:0px;
+  top:0px;
+  width: 1024px;
+  height: 768px;
+}
+
+p#distance {  
+  position: absolute;
+  left:0px;
+  top:0px;
+  width: 512px;
+  text-align: center;
+}

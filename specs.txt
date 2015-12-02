@@ -1,0 +1,37 @@
+I have a camera facing in an arbitrary direction and an axis of translation that is more or less parallel to the camera's z-axis, but which does not pass through the camera location.
+
+    SPECIAL CASE: translation axis is not parallel to camera z-axis but does pass through the camera position. Dragging an object with the mouse along this axis will still work.
+
+I can define a plane whose normal can be calculated from the crossproduct of the axis and the vector between any point on the line and the camera position.
+
+I can determine the closest point on the axis to the camera position, and use a vector from there to the camera as the x-axis. This x-axis will be orthogonal to the translation axis.
+
+I can send a ray out from the camera in any direction. The angle between the (cross-product of this ray and the x-axis) and the normal to the camera-translation-axis plane will give an angle between two planes.
+
+I can imagine a tube that encloses the translation ray with a radius equal to the distance from the translation ray to the camera. Any ray sent from the camera that is not in a plane tangential to the tube will pass through the tube in two places.  The point on that ray midway between the two intersection points will be the closest point to the translation ray. For any ray that is tangential to the tube, the camera is already at the closest point to th translation ray.
+
+I can imagine a plane that cuts the camera-translation-axis plane at right-angles along the translation axis, and a ray in this plane that is exactly the same distance from the translation axis as the camera is. This new ray is at the apex of the tube
+
+If the camera ray is not parallel to the translation ray, then at one point this tube-apex-ray will intersact the ray plane. That point will be the furthest exit intersection point along the tube: half way along the ray to the point will be the closest point between the two rays. Dragging the mouse further along the camera ray plane at right angles to the apex ray, at this distance will cause the closest point to move (unintuitively) back towards the camera.
+
+
+STEPS:
+
+On startDrag, determine:
+  camera position
+  distance from translation axis to camera
+  normal to plane containing t-axis and camera position
+  plane rotation axis, from closest point on t-axis to camera
+  point on apex-ray (we already know its direction) 
+
+On drag, determine:
+  mouseRay direction (from projection)
+  cross-product of mouseRay and pr-axis. This is normal to mousePlane
+  cross-product of this and pr-axis: vector in same plane as translation-ray and apex-ray - mouse-plane-axis
+  distance from mousePlane to origin (to create a THREE.Plane)
+  intersection of apex-ray and mousePlane: 
+  direction of camera to this intersection: max-axis
+  angle between max-axis and mp-axis as rotation around mousePlane normal: apex-angle
+  angle between mouse ray and mp-axis
+
+  If this angle is less than apex-angle, then use max-axis instead of mouse ray.
