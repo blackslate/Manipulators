@@ -17,16 +17,20 @@ of the manipulated object. Later versions will:
 * use ctx() to update the local matrix of each object reactively
 **/
 
+var dragPlane
+var camera
+var scene
 
 function init() {
-  var scene = new THREE.Scene()
+  scene = new THREE.Scene()
 
   // <FOR TESTING ONLY>
-  var freedom = "z" //"x" | "y" | "z" | "yz" | "xy" | "xz" | "xyz"
+  var freedom = "" //"x" | "y" | "z" | "yz" | "xy" | "xz" | "xyz"
   var basis = "world" // "local" | "view"
   var action = "translate"
 
   var dragCube
+  var dragLine  
 
   document.querySelector("#basis").onchange = function (event) {
     basis = event.target.value
@@ -42,27 +46,35 @@ function init() {
       color: 0xffff00
     , opacity: 0.25
     , transparent: true
+    , side: THREE.DoubleSide
     })
     var cyanMaterial = new THREE.MeshBasicMaterial({
       color: 0x00ffff
     , opacity: 0.5
     , transparent: true
+    , side: THREE.DoubleSide
     })
     var magentaMaterial = new THREE.MeshBasicMaterial({
       color: 0xff00ff
     , opacity: 0.5
     , transparent: true
+    , side: THREE.DoubleSide
     })
     var xyPlane = new THREE.Mesh(planeGeometry, yellowMaterial)
+    xyPlane.name = "xy"
     scene.add(xyPlane)
 
     var yzPlane = new THREE.Mesh(planeGeometry, cyanMaterial)
     yzPlane.rotation.y = 0.5 * Math.PI
+    yzPlane.name = "yz"
     scene.add(yzPlane)
 
     var xzPlane = new THREE.Mesh(planeGeometry, magentaMaterial)
     xzPlane.rotation.x = -0.5 * Math.PI
+    xzPlane.name = "xz"
     scene.add(xzPlane)
+
+    scene.add(new THREE.AxisHelper(600))
   })()
  
   ;(function treatContext(){
@@ -106,42 +118,109 @@ function init() {
 
   ;(function testing() {     
     // CUBE TO DRAG
+    var planeGeometry = new THREE.PlaneGeometry( 1000, 1000 );
+    var planeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x000000
+    , side: THREE.DoubleSide
+    , transparent: true
+    , opacity: 0.2
+    } )
+    var lineGeometry = new THREE.Geometry();
+    var lineMaterial = new THREE.LineBasicMaterial({
+      color: 0x000000
+    })
     var cubeGeometry = new THREE.BoxGeometry(40, 40, 40)
     var cubeMaterial = new THREE.MeshBasicMaterial({
       color: 0x000000
     , wireframe: true})
     dragCube = new THREE.Mesh(cubeGeometry, cubeMaterial)
-    dragAxes = new THREE.AxisHelper(100)
-    dragCube.add(dragAxes)
-    dragCube.rotation.x = 30
-    dragCube.rotation.y = 45
+
+    lineGeometry.vertices.push(new THREE.Vector3(0, 1000, 0))
+    lineGeometry.vertices.push(new THREE.Vector3(0, -1000, 0))
+    dragLine = new THREE.Line(lineGeometry, lineMaterial)
+    dragLine.visible = false
+    
+    dragCube.add(dragLine)
+    dragCube.add(new THREE.AxisHelper(100))
+
+    dragPlane = new THREE.Mesh( planeGeometry, planeMaterial )
+    dragPlane.name = "drag"
+    dragPlane.visible = false
+    dragCube.add(dragPlane)
+
+    dragCube.rotation.x = 30 // Math.PI / 6
+    dragCube.rotation.y = 45 // Math.PI / 4
     scene.add(dragCube)
   })()
   // </FOR TESTING ONLY>
 
-  // Create a perspective camera
-  var FOV = 45
+  var renderer = new THREE.WebGLRenderer()
+  var cameras = []
+
   var WIDTH = window.innerWidth
   var HEIGHT = window.innerHeight
-  var ASPECT = WIDTH / HEIGHT
-  var NEAR = 0.1
-  var FAR = 3000
-  var camera = new THREE.PerspectiveCamera(FOV, ASPECT, NEAR, FAR)
 
-  // position and point the camera to the center of the scene
-  camera.position.x = 500
-  camera.position.y = 700
-  camera.position.z = 1300
-  camera.lookAt(scene.position)
+  ;(function createPerspectiveCamera(){
+    var FOV = 45
+    var ASPECT = WIDTH / HEIGHT
+    var NEAR = 1
+    var FAR = 3000
+    camera = new THREE.PerspectiveCamera(FOV, ASPECT, NEAR, FAR)
 
-  // create a render and set the size
-  var renderer = new THREE.WebGLRenderer()
-  renderer.setClearColor(new THREE.Color(0xEEEEEE))
-  renderer.setSize(WIDTH, HEIGHT)
+    camera.position.x = 500
+    camera.position.y = 700
+    camera.position.z = 1300
+    camera.viewport = { x: 0, y: 0, width: WIDTH, height: HEIGHT }
+    camera.lookAt(scene.position)
+    cameras.push(camera)
+  })()
 
+  ;(function createCameraController(){
+    var viewport = {
+      x: WIDTH - 100
+    , y: HEIGHT - 100
+    , width: 100
+    , height: 100
+    }
+    var circle = {
+      x: WIDTH - 50
+    , y: 50
+    , radius: 50
+    }
+    var settings = {
+      viewport: viewport
+    , circle: circle
+    }
+    addCameraController(scene, camera, cameras, settings)
+  })()
 
-  // add the output of the renderer to the html element
-  document.getElementById("WebGL-output").appendChild(renderer.domElement)
+  ;(function initializeRenderer(){
+    renderer.setClearColor(new THREE.Color(0xEEEEFF))
+    renderer.setSize(WIDTH, HEIGHT)
+    renderer.autoClear = false;
+
+    document.getElementById("WebGL-output").appendChild(renderer.domElement)
+
+    ;(function render() {
+      var viewport
+      renderer.setViewport( 0, 0, WIDTH, HEIGHT );
+      renderer.clear();
+
+      
+      cameras.forEach(function (camera) {
+        viewport = camera.viewport // custom property
+        renderer.setViewport(
+          viewport.x
+        , viewport.y
+        , viewport.width
+        , viewport.height
+        )
+        renderer.render(scene, camera)
+      })
+
+      requestAnimationFrame(render)
+    })()
+  })()
 
   ;(function createObjectManipulator(scene, camera){
     window.addEventListener( 'mousedown', startDrag, false )
@@ -192,8 +271,12 @@ function init() {
       function initializeTranslation() {
         axisPoint.setFromMatrixPosition(targetObject.matrixWorld)
 
+        // <TESTING>
+        dragLine.visible = false
+        // </TESTING>
+
         switch (freedom) {
-          default: // case "xyz":
+          default: // case "": case "xyz":
             createConstraintPlane(camera.getWorldDirection())
           break
 
@@ -217,14 +300,34 @@ function init() {
             createConstraintPlane(zAxis)
           break
         }
+      
+        // <TESTING>
+        point = new THREE.Vector3().setFromMatrixPosition(targetObject.matrixWorld)
+             .add(plane.normal)
+        targetObject.worldToLocal(point)
+        dragPlane.lookAt(point) 
+        dragPlane.visible = true         
+        // </TESTING>
 
         function createAxisPlane(translationAxis) {
+        // <TESTING>
+          var point = axisPoint.clone().addScaledVector(translationAxis, 1000)
+          dragCube.worldToLocal(point)
+          dragLine.geometry.vertices.length = 0
+          dragLine.geometry.vertices.push(point)
+          point = axisPoint.clone().addScaledVector(translationAxis, -1000)
+          dragCube.worldToLocal(point)
+          dragLine.geometry.vertices.push(point)
+          dragLine.geometry.verticesNeedUpdate = true
+          dragLine.visible = true
+          // </TESTING>
+
           moveRay.direction.copy(translationAxis)
           moveRay.origin.copy(axisPoint)
 
           cameraPosition.setFromMatrixPosition( camera.matrixWorld )
           
-          moveRay.closestPointToPoint(cameraPosition, axisPoint)
+          axisPoint.copy(cameraPosition).mapToRayLine(moveRay)
           plane.normal.subVectors(cameraPosition, axisPoint)
 
           //// TREAT SPECIAL CASE:
@@ -328,14 +431,8 @@ function init() {
       intersects = raycaster.intersectObject(dragCube)
       
       return intersects[0] // may be undefined
-    }
-  
+    }  
   })(scene, camera)
-
-  ;(function render() {
-    renderer.render(scene, camera)
-    requestAnimationFrame(render)
-  })()
 }
 
 THREE.Vector3.prototype.mapToRayLine = function ( ray ) {

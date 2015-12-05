@@ -2,14 +2,12 @@
 <html>
 
 <head>
-  <title>THREE.JS WORLD</title>
+  <title>Translate Demo</title>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
   <style>
     body {
-        /* set margin to 0 and overflow to hidden, to
-         use the complete page */
-        margin: 0;
-        overflow: hidden;
+      margin: 0;
+      overflow: hidden;
     }
     select {
       position: absolute;
@@ -30,23 +28,23 @@
 </head>
 <body>
 
-<!-- Div which will hold the Output -->
-<div id="WebGL-output">
-</div>
-<select id="action">
-  <option value="world">Translate</option> 
-  <option value="local">Rotate</option>
-  <option value="view">Scale</option>
-</select>
+<div id="WebGL-output"></div>
+
 <select id="basis">
   <option value="world">World</option> 
   <option value="local">Local</option>
   <option value="view">View</option>
 </select>
-<p>Freedom: <span id="freedom">z</span></p>
 
-<!-- Javascript code that runs our Three.js examples -->
-<script src="js/custom.js">
-</script>
+<select id="action">
+  <option value="translate">Translate</option> 
+  <option value="rotate" disabled>Rotate</option>
+  <option value="scale" disabled>Scale</option>
+</select>
+
+<p>Freedom: <span id="freedom">xyz</span></p>
+
+<script src="js/camera.js"></script>
+<script src="js/custom.js"></script>
 </body>
 </html>
