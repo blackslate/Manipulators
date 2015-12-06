@@ -1,11 +1,15 @@
-addCameraController = function (scene, camera, cameras, settings) {
+addCameraController = function (viewport, circle) {
+  var context = window.context
+  var scene = context.scene
+  var camera = context.camera
+  var cameras = context.cameras
+
   var controlCamera
-  var viewport = settings.viewport
 
   // For mouse interactions
-  var centreX = settings.circle.x
-  var centreY = settings.circle.y
-  var radius = settings.circle.radius
+  var centreX = circle.x
+  var centreY = circle.y
+  var radius = circle.radius
   var radius2 = radius * radius
   var rotationMatrix = new THREE.Matrix4()
   var pivotMatrix = new THREE.Matrix4()
@@ -41,12 +45,6 @@ addCameraController = function (scene, camera, cameras, settings) {
       var cube = new THREE.Object3D()
       var cubeGeometry = new THREE.BoxGeometry( side, side, side )
 
-      // // var lineMaterial = new THREE.LineBasicMaterial({
-      //   color: 0xffffff
-      // , transparent: true
-      // , opacity: 0.5
-      // })
-
       var faceMaterial = new THREE.MeshPhongMaterial({
         color: 0x006699
       , emissive: 0x999900
@@ -60,16 +58,10 @@ addCameraController = function (scene, camera, cameras, settings) {
       , faceMaterial
       )
 
-      // cube.add(
-      //   new THREE.LineSegments(
-      //     new THREE.WireframeGeometry( cubeGeometry )
-      //   , lineMaterial
-      //   )
-      // )
       cube.add(new THREE.BoxHelper(box))
       cube.add(box)
-
       cube.add(new THREE.AxisHelper(radius))
+      
       scene.add(cube);
     })()
 
@@ -84,7 +76,8 @@ addCameraController = function (scene, camera, cameras, settings) {
     })()
   })()
 
-  window.addEventListener("mousedown", startDrag, false)
+  // window.addEventListener("mousedown", startDrag, false)
+  context.mouseActions.addEventListener("mousedown", startDrag, 1)
 
   function startDrag(event) {
     controlCamera.matrixAutoUpdate = false
@@ -93,7 +86,8 @@ addCameraController = function (scene, camera, cameras, settings) {
     var y = centreY - event.clientY
     var delta2 = x * x + y * y
     if (delta2 > radius2) {
-      return
+      // Not over the controller circle: ignore this priority action
+      return false
     }
 
     var z = Math.sqrt(radius2 - delta2)
@@ -101,6 +95,9 @@ addCameraController = function (scene, camera, cameras, settings) {
     
     window.addEventListener("mousemove", drag, false)
     window.addEventListener("mouseup", stopDrag, false)
+
+    // Prevent any other mousedown events from triggering
+    return true
 
     function drag(event) {     
       var delta

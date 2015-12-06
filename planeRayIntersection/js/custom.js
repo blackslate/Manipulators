@@ -238,6 +238,7 @@ function init() {
     var moveRay = new THREE.Ray()
     var mouseRay = new THREE.Ray()
     var viewToWorldMatrix = new THREE.Matrix4()
+    var dragOffset = new THREE.Vector3()
 
     var targetData
       , targetObject
@@ -269,7 +270,9 @@ function init() {
       }
 
       function initializeTranslation() {
-        axisPoint.setFromMatrixPosition(targetObject.matrixWorld)
+        axisPoint.copy(targetData.point)
+        dragOffset.setFromMatrixPosition(targetObject.matrixWorld)
+                  .sub(axisPoint)
 
         // <TESTING>
         dragLine.visible = false
@@ -393,7 +396,7 @@ function init() {
       }
 
       // TESTING 
-      dragCube.position.copy(planePoint)    
+      dragCube.position.copy(planePoint.add(dragOffset))   
     }
 
     function stopDrag(event) {

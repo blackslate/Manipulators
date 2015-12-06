@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Translate Demo</title>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r73/three.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    select {
+      position: absolute;
+      margin: 0;
+      left: 0;
+      top: 0;
+    }
+    select#action {
+      left: 6em;
+    }
+    p {
+      position: absolute;
+      margin: 0;
+      left: 10em;
+      top: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div id="WebGL-output"></div>
+
+<select id="basis">
+  <option value="world">World</option> 
+  <option value="local">Local</option>
+  <option value="view">View</option>
+</select>
+
+<select id="action">
+  <option value="translate">Translate</option> 
+  <option value="rotate" disabled>Rotate</option>
+  <option value="scale" disabled>Scale</option>
+</select>
+
+<p>Freedom: <span id="freedom">xyz</span></p>
+
+<script src="js/action.js"></script>
+<script src="js/selection.js"></script>
+<script src="js/mouseActions.js"></script>
+<script src="js/mouseManager.js"></script>
+<script src="js/camera.js"></script>
+<!-- <script src="js/manipulator.js"></script> -->
+<script src="js/custom.js"></script>
+<script src="js/setup.js"></script>
+</body>
+</html>

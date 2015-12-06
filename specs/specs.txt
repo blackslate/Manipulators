@@ -13,3 +13,15 @@ On drag:
   Create mouse ray
   Determine where mouse ray cuts the orthogonal plane
   Find closest point on translation axis to this intersection point
+
+
+  var context = {
+    basis: "world"
+  , action: "translate"
+  , freedom: "xyz"
+  , dragHelpers: {} // dragPlane, dragLine, dragAxes
+  , selectableObjects: []
+
+  , scene
+  , camera
+  }
