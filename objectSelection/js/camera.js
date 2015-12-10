@@ -37,11 +37,13 @@
         controlCamera.viewport = viewport
         controlCamera.rotation.copy(camera.rotation)
 
-        // If matrixAutoUpdate is set immediately, the camera rotation 
-        // is not applied
-        // setTimeout(function () {
-        //   controlCamera.matrixWorldNeedsUpdate = true
-        // }, 1)
+        // Wait for the scene to be fully initialized before copying
+        // the rotation of the main camera
+        setTimeout(function () {
+          controlCamera.rotation.copy(camera.rotation)
+          controlCamera.updateMatrixWorld()
+          controlCamera.matrixAutoUpdate = false
+        }, 1)
 
         scene.add(controlCamera)
         cameras.push( controlCamera )
@@ -86,7 +88,6 @@
 
     function startDrag(event) {
       event.preventDefault()
-      controlCamera.matrixAutoUpdate = false
 
       context.setClientPoint(event, clientPoint)
       var x = clientPoint.x - centreX

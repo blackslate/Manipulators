@@ -10,6 +10,15 @@
     var selectableObjects = context.selectableObjects
                         || (context.selectableObjects = [])
 
+    ;(function setCameraPosition(){
+      var camera = context.camera
+
+      camera.position.x = 500
+      camera.position.y = 700
+      camera.position.z = 1300
+      camera.lookAt(context.scene.position)
+    })()
+
     ;(function createWorldPlanes(){
       // create the ground plane
       var planeGeometry = new THREE.PlaneGeometry(1000, 1000)

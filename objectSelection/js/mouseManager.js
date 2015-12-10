@@ -107,6 +107,5 @@ ASSUMES that window.context contains:
     }
     
     return targetData
-  }  
-  
+  }
 })(window)

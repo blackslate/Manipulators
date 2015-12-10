@@ -14,14 +14,15 @@
       margin: 0;
       left: 0;
       top: 0;
+      width: 9.5em;
     }
     select#action {
-      left: 6em;
+      left: 10em;
     }
-    p {
+    select#freedom {
       position: absolute;
       margin: 0;
-      left: 10em;
+      left: 20em;
       top: 0;
     }
   </style>
@@ -42,10 +43,20 @@
   <option value="scale" disabled>Scale</option>
 </select>
 
-<p>Freedom: <span id="freedom">xyz</span></p>
+<select id="freedom">
+  <option value="x">X axis</option> 
+  <option value="y">Y axis</option> 
+  <option value="z">Z axis</option> 
+  <option disabled>──────</option>
+  <option value="yz">YZ plane</option> 
+  <option value="xz">XZ plane</option> 
+  <option value="xy">XY plane</option> 
+  <option disabled>──────</option>
+  <option value="xyz" disabled>Camera plane</option>
+</select>
 
 <script src="js/helpers.js"></script>
-<script src="js/action.js"></script>
+<script src="js/modes.js"></script>
 <script src="js/selection.js"></script>
 <script src="js/mouseActions.js"></script>
 <script src="js/mouseManager.js"></script>

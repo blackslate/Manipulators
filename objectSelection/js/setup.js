@@ -50,11 +50,8 @@ function initialize() {
     , FAR
     )
 
-    camera.position.x = 500
-    camera.position.y = 700
-    camera.position.z = 1300
+    camera.position.z = 100
     camera.viewport = { x: 0, y: 0, width: WIDTH, height: HEIGHT }
-    camera.lookAt(scene.position)
     cameras.push(camera)
   })()
 
@@ -71,7 +68,6 @@ function initialize() {
       renderer.setViewport( 0, 0, WIDTH, HEIGHT );
       renderer.clear();
 
-      
       cameras.forEach(function (camera) {
         viewport = camera.viewport // custom property
         renderer.setViewport(
@@ -99,6 +95,7 @@ function initialize() {
     , y: 50
     , radius: 50
     }
+    
     context.addCameraController(viewport, circle)
   })()
 
