@@ -1,4 +1,6 @@
-;(function defineAction(){
+"use strict"
+
+;(function defineMode(){
   var context = window.context || (window.context = {})
 
   function initialize() {

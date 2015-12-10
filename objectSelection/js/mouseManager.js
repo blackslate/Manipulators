@@ -1,3 +1,5 @@
+"use strict"
+
 /**
  The mouseManager listens for mouse events and dispatches them to the
  appropriate functions. Functions that have been added to the 
@@ -23,8 +25,9 @@ ASSUMES that window.context contains:
   var clientPoint = {}
   var mouseActions // { <actionName>: <function>, ... }
   var mouseDownActions // [ <function>, ... ]
+  var webGLElement = document.querySelector("#WebGL-output")
 
-  addListener(window, "start", mouseDown)
+  context.addListener(webGLElement, "start", mouseDown)
 
   function mouseDown(event) {
     var stopEvent = false
@@ -64,11 +67,11 @@ ASSUMES that window.context contains:
         selection.push(targetData.target)
       }
 
-      // <DEBUGGING>
-      selection.forEach(function (selectedObject) {
-        console.log (selectedObject.name)
-      })
-      // </DEBUGGING>
+      // // <DEBUGGING>
+      // selection.forEach(function (selectedObject) {
+      //   console.log (selectedObject.name)
+      // })
+      // // </DEBUGGING>
 
       action = mouseActions[context.action]
       if (action) {
@@ -86,7 +89,7 @@ ASSUMES that window.context contains:
     var targetData // intersection data object | undefined
     var target
 
-    setClientPoint(event, clientPoint)
+    context.setClientPoint(event, clientPoint)
     viewPoint.x = (clientPoint.x / width) * 2 - 1
     viewPoint.y = 1 - (clientPoint.y / height) * 2
 

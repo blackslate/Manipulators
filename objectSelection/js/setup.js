@@ -1,3 +1,5 @@
+"use strict"
+
 /**
 This version uses a THREE.Raycaster to get the object under the mouse
 when the user first clicks. Later versions should use ...
@@ -97,10 +99,10 @@ function initialize() {
     , y: 50
     , radius: 50
     }
-    addCameraController(viewport, circle)
+    context.addCameraController(viewport, circle)
   })()
 
-  createCustomScene()
+  context.createCustomScene()
 }
 
 window.addEventListener("load", initialize, false)

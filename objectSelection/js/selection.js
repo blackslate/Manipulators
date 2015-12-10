@@ -1,3 +1,5 @@
+"use strict"
+
 ;(function createSelectionObject (window) {
   var context = window.context || (window.context = {})
   var selection = context.selection = {

@@ -1,4 +1,4 @@
-"use strict";
+"use strict"
 
 /**
  The MouseActions object assembles in one place all the actions that can be started by a mousedown event, depending on the interface
@@ -59,15 +59,12 @@
       return
     }
 
-    console.log(targetData)
-    console.log(selection)
-
     target = targetData.target
     setCamera()
     setBasis()
 
-    addListener( window, "move", dragToTranslate )
-    addListener( window, "stop", stopDrag )
+    context.addListener( window, "move", dragToTranslate )
+    context.addListener( window, "stop", stopDrag )
 
     ;(function initializeTranslation() {
       axisPoint.copy(targetData.point)
@@ -128,8 +125,8 @@
     }
 
     function stopDrag(event) {
-      removeListener(window, "move", dragToTranslate)
-      removeListener(window, "stop", stopDrag)      
+      context.removeListener(window, "move", dragToTranslate)
+      context.removeListener(window, "stop", stopDrag)      
     }
   }
 
@@ -206,7 +203,7 @@
   }
 
   function setMouseRay(event) {
-    setClientPoint(event, clientPoint)
+    context.setClientPoint(event, clientPoint)
     nearPoint.x = (clientPoint.x / viewWidth) * 2 - 1
     nearPoint.y = 1 - (clientPoint.y / viewHeight) * 2
     nearPoint.z = -1
@@ -246,12 +243,3 @@
     plane.constant = -axisPoint.dot(plane.normal)
   }
 })(window)
-
-
-// Patch for THREE
-THREE.Vector3.prototype.mapToRayLine = function ( ray ) {
-  this.sub( ray.origin )
-  var directionDistance = this.dot( ray.direction );
-  this.copy( ray.direction ).multiplyScalar( directionDistance )
-       .add( ray.origin )
-}
