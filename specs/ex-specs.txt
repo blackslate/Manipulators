@@ -1,3 +1,34 @@
+Finding the closest point on a translation axis to a given ray can lead to un-intuitive results if the translation axis is almost parallel to the camera. Moving the mouse ray right may move the closest point on the translation axis to the left.
+
+An alternative solution is to create a plane that contains the translation axis and whose normal is from the closest point on the translation axis towards the camera. Such a plane needs to be created for only the object that the user clicked on. All other selected objects will move in the same fashion.
+
+STEPS 
+
+On startDrag:
+  Find closest point on translation axis to camera position
+  Create normal from that point to the camera
+  Determine how for the plane is from the origin along this normal
+
+On drag:
+  Create mouse ray
+  Determine where mouse ray cuts the orthogonal plane
+  Find closest point on translation axis to this intersection point
+
+
+  var context = {
+    basis: "world"
+  , action: "translate"
+  , freedom: "xyz"
+  , dragHelpers: {} // dragPlane, dragLine, dragAxes
+  , selectableObjects: []
+
+  , scene
+  , camera
+  }
+
+
+
+
 I have a camera facing in an arbitrary direction and an axis of translation that is more or less parallel to the camera's z-axis, but which does not pass through the camera location.
 
     SPECIAL CASE: translation axis is not parallel to camera z-axis but does pass through the camera position. Dragging an object with the mouse along this axis will still work.

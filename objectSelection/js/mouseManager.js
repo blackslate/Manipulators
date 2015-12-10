@@ -20,10 +20,11 @@ ASSUMES that window.context contains:
   var viewPoint = new THREE.Vector3()
   var raycaster = new THREE.Raycaster()
   var selection = []
+  var clientPoint = {}
   var mouseActions // { <actionName>: <function>, ... }
   var mouseDownActions // [ <function>, ... ]
 
-  window.addEventListener("mousedown", mouseDown, false)
+  addListener(window, "start", mouseDown)
 
   function mouseDown(event) {
     var stopEvent = false
@@ -85,8 +86,9 @@ ASSUMES that window.context contains:
     var targetData // intersection data object | undefined
     var target
 
-    viewPoint.x = (event.clientX / width) * 2 - 1
-    viewPoint.y = 1 - (event.clientY / height) * 2
+    setClientPoint(event, clientPoint)
+    viewPoint.x = (clientPoint.x / width) * 2 - 1
+    viewPoint.y = 1 - (clientPoint.y / height) * 2
 
     raycaster.setFromCamera( viewPoint, camera )
     intersects = raycaster.intersectObjects(selectableObjects, true)

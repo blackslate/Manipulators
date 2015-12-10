@@ -35,23 +35,39 @@
   var plane = new THREE.Plane()
   var moveRay = new THREE.Ray()
   var mouseRay = new THREE.Ray()
+  var clientPoint = {}
 
   actions.select = function select(event) {
     
   }
 
+  /**
+   * [translate description]
+   * @param  {object} targetData { distance: <number>
+   *                             . face: <THREE.Face3>
+   *                             . faceIndex: <integer>
+   *                             . object: <object>
+   *                             . point: <THREE.Vector3>
+   *                             . target: <object or its parent>
+   *                             . uv: <THREE.Vector2>
+   * @param  {array} selection   [<selected target object>, ... ]
+   * @return {[type]}            undefined
+   */
   actions.translate = function translate( targetData, selection ) {
     if (!(targetData)) {
       // Nothing to translate
       return
     }
 
+    console.log(targetData)
+    console.log(selection)
+
     target = targetData.target
     setCamera()
     setBasis()
 
-    window.addEventListener( 'mousemove', dragToTranslate, false )
-    window.addEventListener( 'mouseup', stopDrag, false )
+    addListener( window, "move", dragToTranslate )
+    addListener( window, "stop", stopDrag )
 
     ;(function initializeTranslation() {
       axisPoint.copy(targetData.point)
@@ -112,12 +128,12 @@
     }
 
     function stopDrag(event) {
-      window.removeEventListener('mousemove', dragToTranslate, false)
-      window.removeEventListener('mouseup', stopDrag, false)      
+      removeListener(window, "move", dragToTranslate)
+      removeListener(window, "stop", stopDrag)      
     }
   }
 
-  actions.rotate = function rotate(event) {
+  actions.rotate = function rotate( targetData, selection ) {
     
   }
 
@@ -190,8 +206,9 @@
   }
 
   function setMouseRay(event) {
-    nearPoint.x = (event.clientX / viewWidth) * 2 - 1
-    nearPoint.y = 1 - (event.clientY / viewHeight) * 2
+    setClientPoint(event, clientPoint)
+    nearPoint.x = (clientPoint.x / viewWidth) * 2 - 1
+    nearPoint.y = 1 - (clientPoint.y / viewHeight) * 2
     nearPoint.z = -1
 
     farPoint.copy(nearPoint).z = 1

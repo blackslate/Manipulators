@@ -1,8 +1,16 @@
-Finding the closest point on a translation axis to a given ray can lead to un-intuitive results if the translation axis is almost parallel to the camera. Moving the mouse ray right may move the closest point on the translation axis to the left.
+RIGHT CLICK OPTIONS
+Translate|Rotate|Scale
+World|Local|View
+Freedom
+- Rotation
+  - Place pivot
+  - Set increment
 
-An alternative solution is to create a plane that contains the translation axis and whose normal is from the closest point on the translation axis towards the camera. Such a plane needs to be created for only the object that the user clicked on. All other selected objects will move in the same fashion.
 
-STEPS 
+ROTATION
+
+
+TRANSLATION
 
 On startDrag:
   Find closest point on translation axis to camera position

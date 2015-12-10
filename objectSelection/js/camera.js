@@ -7,6 +7,7 @@ addCameraController = function (viewport, circle) {
   var controlCamera
 
   // For mouse interactions
+  var clientPoint = {}
   var centreX = circle.x
   var centreY = circle.y
   var radius = circle.radius
@@ -33,9 +34,9 @@ addCameraController = function (viewport, circle) {
 
       // If matrixAutoUpdate is set immediately, the camera rotation 
       // is not applied
-      setTimeout(function () {
-        controlCamera.matrixAutoUpdate = false
-      }, 1)
+      // setTimeout(function () {
+      //   controlCamera.matrixWorldNeedsUpdate = true
+      // }, 1)
 
       scene.add(controlCamera)
       cameras.push( controlCamera )
@@ -76,14 +77,16 @@ addCameraController = function (viewport, circle) {
     })()
   })()
 
-  // window.addEventListener("mousedown", startDrag, false)
   context.mouseActions.addEventListener("mousedown", startDrag, 1)
 
   function startDrag(event) {
+    event.preventDefault()
     controlCamera.matrixAutoUpdate = false
 
-    var x = event.clientX - centreX
-    var y = centreY - event.clientY
+    setClientPoint(event, clientPoint)
+    var x = clientPoint.x - centreX
+    var y = centreY - clientPoint.y
+
     var delta2 = x * x + y * y
     if (delta2 > radius2) {
       // Not over the controller circle: ignore this priority action
@@ -93,16 +96,17 @@ addCameraController = function (viewport, circle) {
     var z = Math.sqrt(radius2 - delta2)
     start.set(x, y, z)
     
-    window.addEventListener("mousemove", drag, false)
-    window.addEventListener("mouseup", stopDrag, false)
+    addListener(window, "move", drag)
+    addListener(window, "stop", stopDrag)
 
     // Prevent any other mousedown events from triggering
     return true
 
     function drag(event) {     
       var delta
-      x = event.clientX - centreX
-      y = centreY - event.clientY
+      setClientPoint(event, clientPoint)
+      x = clientPoint.x - centreX
+      y = centreY - clientPoint.y
       delta2 = x * x + y * y
 
       if (delta2 > radius2) {
@@ -117,9 +121,6 @@ addCameraController = function (viewport, circle) {
 
       end.set(x, y, z)
       angle = start.angleTo(end)
-      if (angle > 0) {
-        a = 0
-      }
       start.cross(end).normalize()
 
       rotationMatrix.makeRotationAxis(start, -angle)
@@ -136,8 +137,8 @@ addCameraController = function (viewport, circle) {
     }
 
     function stopDrag(event) {
-      window.removeEventListener("mousemove", drag, false)
-      window.removeEventListener("mouseup", stopDrag, false)      
+      removeListener(window, "move", drag)
+      removeListener(window, "stop", stopDrag)      
     }
   }
 }
