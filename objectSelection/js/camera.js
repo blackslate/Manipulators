@@ -10,6 +10,8 @@
     var cameras = context.cameras
 
     var controlCamera
+    // Choose location miles from anywhere
+    var controlLocation = new THREE.Vector3(10000, 10000, 10000)
 
     // For mouse interactions
     var clientPoint = {}
@@ -45,6 +47,8 @@
           controlCamera.matrixAutoUpdate = false
         }, 1)
 
+        controlCamera.position.copy(controlLocation)
+
         scene.add(controlCamera)
         cameras.push( controlCamera )
       })()
@@ -69,6 +73,8 @@
         cube.add(new THREE.BoxHelper(box))
         cube.add(box)
         cube.add(new THREE.AxisHelper(radius))
+
+        cube.position.copy(controlLocation)
         
         scene.add(cube);
       })()
