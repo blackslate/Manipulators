@@ -1,16 +1,37 @@
 "use strict"
 
-// Patch for THREE
-THREE.Vector3.prototype.mapToRayLine = function ( ray ) {
-  this.sub( ray.origin )
-  var directionDistance = this.dot( ray.direction );
-  this.copy( ray.direction ).multiplyScalar( directionDistance )
-       .add( ray.origin )
-}
-
-
-;(function defineMode(){
+;(function helpers(){
   var context = window.context || (window.context = {})
+
+  // Patch for THREE.Vector3
+  THREE.Vector3.prototype.mapToRayLine = function ( ray ) {
+    this.sub( ray.origin )
+    var directionDistance = this.dot( ray.direction );
+    this.copy( ray.direction ).multiplyScalar( directionDistance )
+         .add( ray.origin )
+  }
+
+  // Patch for THREE.Camera
+  THREE.Camera.prototype.setWorldViewProperties = function () {
+    var viewToWorldMatrix = this.viewToWorldMatrix
+        || (this.viewToWorldMatrix = new THREE.Matrix4())
+    var worldToViewMatrix = this.worldToViewMatrix
+        || (this.worldToViewMatrix = new THREE.Matrix4())
+    var worldPosition = this.worldPosition
+        || (this.worldPosition = new THREE.Vector3())
+
+    viewToWorldMatrix.multiplyMatrices(
+      this.matrixWorld
+    , viewToWorldMatrix.getInverse(this.projectionMatrix)
+    )
+
+    worldToViewMatrix.multiplyMatrices(
+      this.projectionMatrix
+    , worldToViewMatrix.getInverse(this.matrixWorld)
+    )
+
+    this.worldPosition.setFromMatrixPosition( this.matrixWorld )
+  }
 
   context.setClientPoint = function (event, clientPoint) {
     clientPoint.x = event.clientX || event.touches[0].clientX

@@ -19,8 +19,6 @@
   var camera // context.camera
   var viewWidth // camera.viewport.width
   var viewHeight // camera.viewport.height
-  var cameraPosition = new THREE.Vector3()
-  var viewToWorldMatrix = new THREE.Matrix4()
 
   var basisMatrix = new THREE.Matrix4()
   var xAxis = new THREE.Vector3()
@@ -180,10 +178,8 @@
     camera = context.camera
     viewWidth = camera.viewport.width
     viewHeight = camera.viewport.height
-
-    cameraPosition.setFromMatrixPosition( camera.matrixWorld )
   
-    viewToWorldMatrix.multiplyMatrices(camera.matrixWorld, viewToWorldMatrix.getInverse(camera.projectionMatrix))
+    camera.setWorldViewProperties()
   }
 
   function setBasis() {
@@ -209,8 +205,8 @@
     nearPoint.z = -1
 
     farPoint.copy(nearPoint).z = 1
-    nearPoint.applyProjection(viewToWorldMatrix)
-    farPoint.applyProjection(viewToWorldMatrix)
+    nearPoint.applyProjection(camera.viewToWorldMatrix)
+    farPoint.applyProjection(camera.viewToWorldMatrix)
     
     mouseRay.origin.copy(nearPoint)
     mouseRay.direction.subVectors(farPoint, nearPoint)
@@ -220,11 +216,11 @@
     moveRay.direction.copy(translationAxis).normalize()
     moveRay.origin.copy(axisPoint)
     
-    axisPoint.copy(cameraPosition).mapToRayLine(moveRay)
-    plane.normal.subVectors(cameraPosition, axisPoint)
+    axisPoint.copy(camera.worldPosition).mapToRayLine(moveRay)
+    plane.normal.subVectors(camera.worldPosition, axisPoint)
 
     //// TREAT SPECIAL CASE:
-    //// ** axisPoint identical to cameraPosition **
+    //// ** axisPoint identical to camera.worldPosition **
     //// This is acceptable for an orthogonal camera unless
     //// the translation axis is parallel to the camera 
     //// direction, but it is always meaningless for a

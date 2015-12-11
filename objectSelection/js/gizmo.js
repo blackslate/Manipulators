@@ -8,23 +8,32 @@ Create gizmo with elements for
 - Scale
 
 Place gizmo at a fixed distance from the camera, on a line through the pivot point
+Update position of gizmo as camera settings change.
+- Position (Pan, Dolly)
+- Rotation
  */
 
 ;(function gizmos(window){
   var context = window.context || (window.context = {})
-  var gizmos = []
-  var objects = []
+  // var gizmos = []
+  // var objects = []
   var gizmo
 
   context.getGizmo = function getGizmo (object, action, basis) {
-    var index = objects.indexOf(object)
-    if (index < 0) {
+    // var index = objects.indexOf(object)
+    // if (index < 0) {
+    //   createGizmo()
+    //   gizmos.push(gizmo)
+    //   object.push(object)
+    // } else {
+    //   gizmo = gizmos[index]
+    // }
+
+    if (!gizmo) {
       createGizmo()
-      gizmos.push(gizmo)
-      object.push(object)
-    } else {
-      gizmo = gizmos[index]
     }
+
+    return gizmo
 
     function createGizmo() {
       gizmo = new THREE.Object3D()
