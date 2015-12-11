@@ -73,4 +73,38 @@
       break
     }
   }
+
+  context.getTargetData = (function () {
+    var clientPoint = {}
+    var viewPoint = new THREE.Vector3()
+    var raycaster = new THREE.Raycaster()
+
+    return function getTargetData (event, camera, selectableObjects) {
+      var viewport = camera.viewport
+      var intersects // array of intersection data objects
+      var targetData // intersection data object | undefined
+      var target
+
+      context.setClientPoint(event, clientPoint)
+      clientPoint.x -= viewport.x
+      clientPoint.y -= (context.HEIGHT - viewport.y - viewport.height)
+      viewPoint.x = (clientPoint.x / viewport.width) * 2 - 1
+      viewPoint.y = 1 - (clientPoint.y / viewport.height) * 2
+
+      raycaster.setFromCamera( viewPoint, camera )
+      intersects = raycaster.intersectObjects(selectableObjects, true)
+
+      targetData = intersects[0] // may be undefined
+
+      if (targetData) {
+        target = targetData.object
+        while (target && selectableObjects.indexOf(target) < 0) {
+          target = target.parent
+        }
+        targetData.target = target
+      }
+      
+      return targetData
+    }
+  })();
 })(window)

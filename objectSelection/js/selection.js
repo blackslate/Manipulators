@@ -37,6 +37,8 @@
       this.selected.unshift(object)
     }
 
+    context.getGizmo(this.get())
+
     function deselectAll() {
       selection.selected.forEach(function (object) {
         deselect(object)
@@ -49,15 +51,13 @@
       if (boundingBoxModel) {
         boundingBoxModel.visible = true
       }
-
-      context.getGizmo(object)
     }
 
     function deselect(object) {
       var boundingBoxModel = getBoundingBoxModel(object)
       if (boundingBoxModel) {
         boundingBoxModel.visible = false
-      }   
+      }
     }
 
     function getBoundingBoxModel(object) {

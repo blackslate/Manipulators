@@ -32,6 +32,7 @@
     }
     action.onchange = function (event) {
       context.action = event.target.value
+      context.getGizmo()
     }
     freedom.onchange = function (event) {
       context.freedom = event.target.value

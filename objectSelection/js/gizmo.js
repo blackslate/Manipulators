@@ -17,6 +17,7 @@ Update position of gizmo as camera settings change.
   var context = window.context || (window.context = {})
   var gizmo
   var gizmoCamera
+  var gizmoObject
 
   var scene = new THREE.Scene()
   var camera = context.camera
@@ -27,20 +28,32 @@ Update position of gizmo as camera settings change.
   var parts = {}
   var part
 
-  context.getGizmo = function getGizmo(object, basis){
+  context.getGizmo = function getGizmo(object){
     var camera = context.camera
     var action = context.action
+    var basis = context.basis
 
     if (!gizmo) {
       createGizmo()
     }
 
-    setGizmoBasis(basis)
-    showGizmoParts(action)
-    context.addCameraListener(placeGizmo)
-    setTimeout(placeGizmo, 1)
- 
-    return gizmo
+    if (object instanceof Array) {
+      if (object.length) {
+        gizmoObject = object[0]
+      } else {
+        gizmoObject = null
+      }
+    } else if (object) {    
+      gizmoObject = object
+    }
+
+    if (gizmoObject) {
+      showGizmoParts(action)
+      gizmo.visible = true
+      setTimeout(placeGizmo, 1)
+    } else {
+      gizmo.visible = false
+    }
 
     function createGizmo() {
       var radius = 1
@@ -105,29 +118,36 @@ Update position of gizmo as camera settings change.
         // x-, y- and z-axis rings
         geometry = new THREE.TorusGeometry(radius*.7, radius*.01, 3, edges);
         part = new THREE.Mesh( geometry, redMaterial )
+        part.name = "rotateX"
         part.rotation.y = Math.PI / 2
         rings.add(part)
 
         part = new THREE.Mesh( geometry, greenMaterial )
+        part.name = "rotateY"
         part.rotation.x = -Math.PI / 2
         rings.add(part)
 
         part = new THREE.Mesh( geometry, blueMaterial )
+        part.name = "rotateZ"
         rings.add(part)
+     
+        // viewplane ring
+        geometry = new THREE.TorusGeometry(radius, radius*.01, 3, edges)
+        part = new THREE.Mesh( geometry, whiteMaterial )
+        part.name = "rotateView"
+        part.rotation.x = Math.PI
+        rotateGizmo.add(part)
         
         // trackball sphere
         geometry = new THREE.SphereGeometry( radius/10, edges, edges )
         part = new THREE.Mesh( geometry, whiteMaterial )
-        rotateGizmo.add(part)
-     
-        // viewplane ring
-        geometry = new THREE.RingGeometry(radius, radius*.98, edges);
-        part = new THREE.Mesh( geometry, whiteMaterial )
-        part.rotation.x = Math.PI
+        part.name = "rotateBall"
         rotateGizmo.add(part)
       })()
 
       scene.add(gizmo)
+      context.addCameraListener(placeGizmo)
+      context.mouseActions.addActionListener("mousedown", startDrag, 10)
     }
 
     function setGizmoBasis(basis) {
@@ -144,11 +164,15 @@ Update position of gizmo as camera settings change.
     }
 
     function placeGizmo() {
+      if (!gizmo.visible) {
+        return
+      }
+
       camera.updateMatrixWorld()
       camera.setWorldViewProperties() // custom method
 
-      object.updateMatrixWorld()
-      objectPosition.setFromMatrixPosition(object.matrixWorld)
+      gizmoObject.updateMatrixWorld()
+      objectPosition.setFromMatrixPosition(gizmoObject.matrixWorld)
       objectPosition.applyProjection(camera.worldToViewMatrix)
 
       gizmoCamera.viewport.x = (
@@ -163,9 +187,45 @@ Update position of gizmo as camera settings change.
       if (part) {
         part.matrix.extractRotation(rotationMatrix.multiplyMatrices(
           camera.matrixWorldInverse
-        , object.matrixWorld
+        , gizmoObject.matrixWorld
         ))
       }
+    }
+
+    function startDrag(event) {
+      var action = context.action
+      var targets = actions[action] ? [actions[action]] : []
+      var targetData = context.getTargetData(
+        event
+      , gizmoCamera
+      , targets
+      ) // may be undefined
+
+      if (!targetData) {
+        return false
+      }
+
+      switch (targetData.object.name) {
+        case "rotateX":
+
+        break
+        case "rotateY":
+
+        break
+        case "rotateZ":
+
+        break
+        case "rotateBall":
+
+        break
+        case "rotateView":
+
+        break
+      }
+
+      console.log(targetData.object.name)
+
+      return true
     }
   }
 })(window)

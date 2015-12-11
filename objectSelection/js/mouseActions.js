@@ -144,7 +144,7 @@
     }
   }
 
-  actions.addEventListener = function(name, action, priority) {
+  actions.addActionListener = function(name, action, priority) {
     if (typeof name === "string" && typeof action === "function") {
       var listeners = events[name] || (events[name] = [])
       if (listeners.indexOf(action) < 0) {

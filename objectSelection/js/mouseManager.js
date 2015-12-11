@@ -19,10 +19,7 @@ ASSUMES that window.context contains:
 
 ;(function createMouseManager(window){
   var context = window.context || (window.context = {})
-  var viewPoint = new THREE.Vector3()
-  var raycaster = new THREE.Raycaster()
   var selection = []
-  var clientPoint = {}
   var mouseActions // { <actionName>: <function>, ... }
   var mouseDownActions // [ <function>, ... ]
   var webGLElement = document.querySelector("#WebGL-output")
@@ -55,7 +52,11 @@ ASSUMES that window.context contains:
     }
 
     if (!stopEvent) {
-      targetData = getTargetData(event) // may be undefined
+      targetData = context.getTargetData(
+        event
+      , context.camera
+      , context.selectableObjects
+      ) // may be undefined
       selection.length = 0
 
       if (context.selection && context.selection.update) {
@@ -78,34 +79,5 @@ ASSUMES that window.context contains:
         action( targetData, selection, event )
       }
     }
-  }
-
-  function getTargetData(event) {
-    var camera = context.camera
-    var width = camera.viewport.width
-    var height = camera.viewport.height
-    var selectableObjects = context.selectableObjects
-    var intersects // array of intersection data objects
-    var targetData // intersection data object | undefined
-    var target
-
-    context.setClientPoint(event, clientPoint)
-    viewPoint.x = (clientPoint.x / width) * 2 - 1
-    viewPoint.y = 1 - (clientPoint.y / height) * 2
-
-    raycaster.setFromCamera( viewPoint, camera )
-    intersects = raycaster.intersectObjects(selectableObjects, true)
-
-    targetData = intersects[0] // may be undefined
-
-    if (targetData) {
-      target = targetData.object
-      while (target && selectableObjects.indexOf(target) < 0) {
-        target = target.parent
-      }
-      targetData.target = target
-    }
-    
-    return targetData
   }
 })(window)

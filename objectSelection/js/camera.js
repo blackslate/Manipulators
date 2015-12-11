@@ -86,8 +86,6 @@
         cube.add(new THREE.BoxHelper(box))
         cube.add(box)
         cube.add(new THREE.AxisHelper(radius))
-
-        //cube.position.copy(controlLocation)
         
         scene.add(cube);
       })()
@@ -103,7 +101,7 @@
       })()
     })()
 
-    context.mouseActions.addEventListener("mousedown", startDrag, 1)
+    context.mouseActions.addActionListener("mousedown", startDrag, 1)
 
     function startDrag(event) {
       event.preventDefault()

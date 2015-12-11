@@ -120,10 +120,6 @@ var monolith
       object.position.y = 225
       object.scale.x = 4
       object.scale.y = 9
-      // object.position.x = -1000
-      // object.position.y = 500
-      // object.position.z = 0
-      // monolith = object
 
       object.name = "Monolith"
       scene.add(object)
