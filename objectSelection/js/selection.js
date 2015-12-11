@@ -49,6 +49,8 @@
       if (boundingBoxModel) {
         boundingBoxModel.visible = true
       }
+
+      context.getGizmo(object)
     }
 
     function deselect(object) {

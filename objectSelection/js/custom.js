@@ -129,8 +129,6 @@ var monolith
       scene.add(object)
       selectableObjects.push(object)
 
-      context.getGizmo(object, context.camera)
-
       // Cone
       object = new THREE.Object3D()
       geometry = new THREE.CylinderGeometry(0, 100, 200)    

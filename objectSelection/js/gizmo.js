@@ -13,28 +13,32 @@ Update position of gizmo as camera settings change.
 - Rotation
  */
 
-var rings
-var selection
-
 ;(function gizmos(window){
   var context = window.context || (window.context = {})
   var gizmo
   var gizmoCamera
-  //var rings
+
   var scene = new THREE.Scene()
   var camera = context.camera
-  var objectPosition = new THREE.Vector3()
-  var ringMatrix = new THREE.Matrix4()
 
-  context.getGizmo = function getGizmo(object, camera, action, basis){
+  var rotationMatrix = new THREE.Matrix4()
+  var objectPosition = new THREE.Vector3()
+  var actions = {}
+  var parts = {}
+  var part
+
+  context.getGizmo = function getGizmo(object, basis){
+    var camera = context.camera
+    var action = context.action
+
     if (!gizmo) {
       createGizmo()
     }
 
     setGizmoBasis(basis)
     showGizmoParts(action)
-    placeGizmo()
     context.addCameraListener(placeGizmo)
+    setTimeout(placeGizmo, 1)
  
     return gizmo
 
@@ -75,46 +79,55 @@ var selection
 
       gizmo = new THREE.Object3D()
       gizmo.name = "gizmo"
-      gizmoCamera = new THREE.OrthographicCamera(
-       -radius, radius
-      , radius,-radius
-      ,-radius, radius
-      );
-      gizmoCamera.viewport = { x: 0, y: 0, width: size, height: size}
-      gizmoCamera.scene = scene
-      gizmo.add(gizmoCamera)
-      context.cameras.push(gizmoCamera)
 
-      // trackball sphere
-      geometry = new THREE.SphereGeometry( radius/10, edges, edges )  
-      part = new THREE.Mesh( geometry, whiteMaterial );
-      gizmo.add(part)
-   
-      // viewplane ring
-      geometry = new THREE.RingGeometry(radius, radius*.98, edges);
-      part = new THREE.Mesh( geometry, whiteMaterial );
-      part.rotation.x = Math.PI
-      gizmo.add(part)
+      ;(function createCamera(){
+        gizmoCamera = new THREE.OrthographicCamera(
+         -radius, radius
+        , radius,-radius
+        ,-radius, radius
+        );
+        gizmoCamera.viewport = { x: 0, y: 0, width: size, height: size}
+        gizmoCamera.scene = scene
+        gizmo.add(gizmoCamera)
+        context.cameras.push(gizmoCamera)
+      })()
 
-      // x-, y- and z-axis rings
-      rings = new THREE.Object3D()
-      rings.matrixAutoUpdate = false
-      geometry = new THREE.TorusGeometry(radius*.7, radius*.01, 3, edges);
-      part = new THREE.Mesh( geometry, redMaterial )
-      part.rotation.y = Math.PI / 2
-      rings.add(part)
+      ;(function rotateGizmo(){
+        var rotateGizmo = new THREE.Object3D()
+        var rings = new THREE.Object3D()
+        rings.matrixAutoUpdate = false
 
-      part = new THREE.Mesh( geometry, greenMaterial )
-      part.rotation.x = -Math.PI / 2
-      rings.add(part)
+        gizmo.add(rotateGizmo)
+        rotateGizmo.add(rings)
+        parts.rotate = rings
+        actions.rotate = rotateGizmo
 
-      part = new THREE.Mesh( geometry, blueMaterial )
-      rings.add(part)
+        // x-, y- and z-axis rings
+        geometry = new THREE.TorusGeometry(radius*.7, radius*.01, 3, edges);
+        part = new THREE.Mesh( geometry, redMaterial )
+        part.rotation.y = Math.PI / 2
+        rings.add(part)
 
-      gizmo.add(rings)
+        part = new THREE.Mesh( geometry, greenMaterial )
+        part.rotation.x = -Math.PI / 2
+        rings.add(part)
+
+        part = new THREE.Mesh( geometry, blueMaterial )
+        rings.add(part)
+        
+        // trackball sphere
+        geometry = new THREE.SphereGeometry( radius/10, edges, edges )
+        part = new THREE.Mesh( geometry, whiteMaterial )
+        rotateGizmo.add(part)
+     
+        // viewplane ring
+        geometry = new THREE.RingGeometry(radius, radius*.98, edges);
+        part = new THREE.Mesh( geometry, whiteMaterial )
+        part.rotation.x = Math.PI
+        rotateGizmo.add(part)
+      })()
+
       scene.add(gizmo)
-
-      setTimeout(placeGizmo, 1)
     }
 
     function setGizmoBasis(basis) {
@@ -122,7 +135,12 @@ var selection
     }
 
     function showGizmoParts(action) {
+      var partKeys = Object.keys(actions)
+      partKeys.forEach(function (partKey) {
+        actions[partKey].visible = (partKey === action)
+      })
 
+      part = parts[action]
     }
 
     function placeGizmo() {
@@ -142,10 +160,12 @@ var selection
           - gizmoCamera.viewport.height
       ) / 2
 
-      rings.matrix.extractRotation(ringMatrix.multiplyMatrices(
-        camera.matrixWorldInverse
-      , object.matrixWorld
-      ))
+      if (part) {
+        part.matrix.extractRotation(rotationMatrix.multiplyMatrices(
+          camera.matrixWorldInverse
+        , object.matrixWorld
+        ))
+      }
     }
   }
 })(window)
