@@ -2,17 +2,31 @@
 
 ;(function cameraController(window){
   var context = window.context || (window.context = {})
+  var listeners = []
+
+  context.addCameraListener = function ( listener ) {
+    var index = listeners.indexOf(listener) 
+
+    if (index < 0) {
+      listeners.push( listener )
+    }
+  }
+
+  context.removeCameraListener = function ( listener ) {
+    var index = listeners.indexOf( listener ) 
+
+    if (index > -1 ) {
+      listeners.splice( index, 1 )
+    }
+  }
 
   context.addCameraController = function (viewport, circle) {
     var context = window.context
-    var scene = context.scene
     var camera = context.camera
     var cameras = context.cameras
-
+    // Create an empty scene for the control camera
+    var scene = new THREE.Scene()
     var controlCamera
-    // Choose location miles from anywhere
-    var controlLocation = new THREE.Vector3(10000, 10000, 10000)
-
     // For mouse interactions
     var clientPoint = {}
     var centreX = circle.x
@@ -27,7 +41,7 @@
     var angle
 
     ;(function createControlCameraCubeAndCircle(){
-      var side = 0.1
+      var side = 1
       var radius = Math.sqrt(side/2 * side/2 * 3)
 
       ;(function createCamera(){
@@ -37,6 +51,7 @@
         , -radius, radius
         );
         controlCamera.viewport = viewport
+        controlCamera.scene = scene
         controlCamera.rotation.copy(camera.rotation)
 
         // Wait for the scene to be fully initialized before copying
@@ -46,8 +61,6 @@
           controlCamera.updateMatrixWorld()
           controlCamera.matrixAutoUpdate = false
         }, 1)
-
-        controlCamera.position.copy(controlLocation)
 
         scene.add(controlCamera)
         cameras.push( controlCamera )
@@ -74,7 +87,7 @@
         cube.add(box)
         cube.add(new THREE.AxisHelper(radius))
 
-        cube.position.copy(controlLocation)
+        //cube.position.copy(controlLocation)
         
         scene.add(cube);
       })()
@@ -146,6 +159,10 @@
         camera.matrixWorldNeedsUpdate = true
 
         start.copy(end)
+
+        listeners.forEach( function ( listener ) {
+          listener()
+        })
       }
 
       function stopDrag(event) {

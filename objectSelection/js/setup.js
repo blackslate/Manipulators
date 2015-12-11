@@ -57,7 +57,8 @@ function initialize() {
 
   ;(function initializeRenderer(){
     var renderer = new THREE.WebGLRenderer()
-    renderer.setClearColor(new THREE.Color(0xEEEEFF))
+    var clearColor = new THREE.Color(0xEEEEFF)
+    renderer.setClearColor(clearColor)
     renderer.setSize(WIDTH, HEIGHT)
     renderer.autoClear = false;
 
@@ -65,8 +66,9 @@ function initialize() {
 
     ;(function render() {
       var viewport
-      renderer.setViewport( 0, 0, WIDTH, HEIGHT );
-      renderer.clear();
+      renderer.setViewport( 0, 0, WIDTH, HEIGHT )
+      //renderer.setClearColor(clearColor)
+      renderer.clear()
 
       cameras.forEach(function (camera) {
         viewport = camera.viewport // custom property
@@ -76,7 +78,23 @@ function initialize() {
         , viewport.width
         , viewport.height
         )
-        renderer.render(scene, camera)
+
+        // if (camera.clearColor) {
+        //   renderer.setClearColor(camera.clearColor)
+        //   // renderer.clear()
+        // } else {
+        //   renderer.setClearColor(clearColor)
+        // }
+
+        // console.log(viewport, camera.clearColor)
+        // Object {x: 0, y: 0, width: 1117, height: 737} undefined
+        // Object {x: 1017, y: 637, width: 100, height: 100} undefined
+        // Object {x: 948.6909660537351, y: 232.44052622476647, width: 100, height: 100} T…E.Color {r: 0.6, g: 0, b: 0}
+        if (camera.scene) {
+          renderer.render(camera.scene, camera)
+        } else {
+          renderer.render(scene, camera)
+        }
       })
 
       requestAnimationFrame(render)

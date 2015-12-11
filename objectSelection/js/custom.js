@@ -1,5 +1,7 @@
 "use strict"
 
+var monolith
+
 ;(function customScene(window){
   var context = window.context || (window.context = {})
 
@@ -17,6 +19,7 @@
       camera.position.y = 700
       camera.position.z = 1300
       camera.lookAt(context.scene.position)
+      //camera.updateMatrixWorld()
     })()
 
     ;(function createWorldPlanes(){
@@ -117,9 +120,16 @@
       object.position.y = 225
       object.scale.x = 4
       object.scale.y = 9
+      // object.position.x = -1000
+      // object.position.y = 500
+      // object.position.z = 0
+      // monolith = object
+
       object.name = "Monolith"
       scene.add(object)
       selectableObjects.push(object)
+
+      context.getGizmo(object, context.camera)
 
       // Cone
       object = new THREE.Object3D()
